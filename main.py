@@ -18,37 +18,7 @@ COOLDOWN_DAYS = int(os.getenv("COOLDOWN_DAYS", "30"))
 
 intents = discord.Intents.default()
 intents.members = True
-intents.message_content = True
-
-@client.event
-async def on_message(message):
-    if message.author.bot:
-        return
-
-    if message.content.lower() == "!testcouple":
-        guild = client.get_guild(GUILD_ID)
-        channel = guild.get_channel(CHANNEL_ID)
-
-        allowed_role = guild.get_role(ALLOWED_ROLE_ID)
-        excluded_roles = [guild.get_role(rid) for rid in EXCLUDED_ROLE_IDS]
-
-        members = [
-            m for m in allowed_role.members
-            if not m.bot and not any(r in m.roles for r in excluded_roles)
-        ]
-
-        if len(members) < 2:
-            await message.channel.send("❌ Not enough members to form a couple.")
-            return
-
-        pair = random.sample(members, 2)
-
-        await channel.send(
-            "🧪 **TEST COUPLE (Manual Trigger)** 🧪\n\n"
-            f"💖 {pair[0].mention} × {pair[1].mention} 💖\n\n"
-            "_This is just a test. Daily couple still drops at 10 AM IST._"
-        )
-
+intents.message_content = False
 
 client = discord.Client(intents=intents)
 
