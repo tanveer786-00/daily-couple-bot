@@ -41,7 +41,7 @@ async def daily_couple():
     now = datetime.now(TIMEZONE)
 
     # 🔹 CHANGE THIS FOR TESTING
-    TARGET_HOUR = 11   # change to 10 later
+    TARGET_HOUR = 12   # change to 10 later
     TARGET_MINUTE = 30  # change to 0 later
 
     # Only run at exact minute
