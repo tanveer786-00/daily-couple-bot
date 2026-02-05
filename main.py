@@ -46,8 +46,16 @@ async def on_ready():
 @tasks.loop(minutes=1)
 async def daily_couple():
     now = datetime.now(TIMEZONE)
-    if now.hour != 10 or now.minute != 0:
+
+    if not (now.hour == 10 and 0 <= now.minute <= 5):
         return
+
+    if os.path.exists("today.txt"):
+        return
+
+    with open("today.txt", "w") as f:
+        f.write(now.strftime("%Y-%m-%d"))
+
 
     data = load_data()
     cutoff = datetime.now(TIMEZONE) - timedelta(days=COOLDOWN_DAYS)
@@ -99,3 +107,11 @@ async def daily_couple():
 
 
 client.run(TOKEN)
+@daily_couple.before_loop
+async def before_daily():
+    await client.wait_until_ready()
+    if os.path.exists("today.txt"):
+        with open("today.txt") as f:
+            if f.read().strip() != datetime.now(TIMEZONE).strftime("%Y-%m-%d"):
+                os.remove("today.txt")
+
