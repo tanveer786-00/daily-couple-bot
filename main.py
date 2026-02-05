@@ -17,7 +17,7 @@ EXCLUDED_ROLE_IDS = list(map(int, os.getenv("EXCLUDED_ROLE_IDS", "").split(","))
 TIMEZONE = pytz.timezone("Asia/Kolkata")
 
 POST_HOUR = 12     # 10 AM IST (change if needed)
-POST_MINUTE = 45
+POST_MINUTE = 0
 
 # ─── BOT SETUP ───────────────────────────────────────────
 intents = discord.Intents.default()
@@ -81,7 +81,7 @@ async def daily_couple():
 
     now = datetime.now(TIMEZONE)
 
-    if now.hour == POST_HOUR and now.minute == POST_MINUTE:
+    if now.hour == POST_HOUR and 0 <= now.minute <= 59:
         if last_post_date != now.date():
             guild = bot.get_guild(GUILD_ID)
             if guild:
