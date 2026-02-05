@@ -112,7 +112,6 @@ if not (now.hour == 11 and 30 <= now.minute <= 35):
     save_data(data)
 
 
-client.run(TOKEN)
 @daily_couple.before_loop
 async def before_daily():
     await client.wait_until_ready()
@@ -120,4 +119,9 @@ async def before_daily():
         with open("today.txt") as f:
             if f.read().strip() != datetime.now(TIMEZONE).strftime("%Y-%m-%d"):
                 os.remove("today.txt")
+
+daily_couple.start()
+
+client.run(TOKEN)
+
 
