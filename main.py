@@ -43,7 +43,7 @@ def pick_random_couple(guild):
     return random.sample(members, 2)
 
 
-async def send_couple():
+async def send_couple(guild):
     global last_post_date
 
     guild = bot.get_guild(GUILD_ID)
@@ -72,7 +72,10 @@ async def daily_couple():
 
     if now.hour == 12 and 0 <= now.minute <= 20:
         if last_post_date != now.date():
-            await send_couple()
+            guild = bot.get_guild(GUILD_ID)
+if guild:
+    await send_couple(guild)
+
 
 
 @bot.event
@@ -84,7 +87,7 @@ async def on_ready():
 
 @bot.command()
 async def testcouple(ctx):
-    await send_couple()
+    await send_couple(ctx.guild)
     await ctx.send("✅ Test couple posted!")
 
 
