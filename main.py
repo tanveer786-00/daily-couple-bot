@@ -1,78 +1,56 @@
 import discord
 from discord.ext import tasks
+import os
 import random
-import json
-import os
-from datetime import datetime, timedelta
-import pytz
-import os
 from datetime import datetime
-last_run_date = None
+import pytz
 
-if os.path.exists("today.txt"):
-    os.remove("today.txt")
-
+# ========== ENV VARIABLES ==========
 TOKEN = os.getenv("DISCORD_TOKEN")
-
 GUILD_ID = int(os.getenv("GUILD_ID"))
 CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
 ALLOWED_ROLE_ID = int(os.getenv("ALLOWED_ROLE_ID"))
-EXCLUDED_ROLE_IDS = list(map(int, os.getenv("EXCLUDED_ROLE_IDS").split(",")))
+
+# Optional (can be empty string)
+EXCLUDED_ROLE_IDS = os.getenv("EXCLUDED_ROLE_IDS", "")
+EXCLUDED_ROLE_IDS = [
+    int(rid) for rid in EXCLUDED_ROLE_IDS.split(",") if rid.strip().isdigit()
+]
 
 TIMEZONE = pytz.timezone("Asia/Kolkata")
-COOLDOWN_DAYS = int(os.getenv("COOLDOWN_DAYS", "30"))
 
+# ========== DISCORD SETUP ==========
 intents = discord.Intents.default()
 intents.members = True
-intents.message_content = False
 
 client = discord.Client(intents=intents)
 
-DATA_FILE = "couples.json"
-
-
-def load_data():
-    if not os.path.exists(DATA_FILE):
-        return []
-    with open(DATA_FILE, "r") as f:
-        return json.load(f)
-
-
-def save_data(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f)
+last_post_date = None  # in-memory, resets only if container restarts
 
 
 @client.event
 async def on_ready():
     print(f"Logged in as {client.user}")
-    if not daily_couple.is_running():
-        daily_couple.start()
+    daily_couple.start()
 
 
 @tasks.loop(minutes=1)
 async def daily_couple():
-    global last_run_date
+    global last_post_date
+
     now = datetime.now(TIMEZONE)
 
-    # TEST WINDOW: 11:30–11:35
-    if not (now.hour == 11 and 30 <= now.minute <= 35):
+    # 🔹 CHANGE THIS FOR TESTING
+    TARGET_HOUR = 11   # change to 10 later
+    TARGET_MINUTE = 30  # change to 0 later
+
+    # Only run at exact minute
+    if now.hour != TARGET_HOUR or now.minute != TARGET_MINUTE:
         return
 
-    today = now.strftime("%Y-%m-%d")
-    if last_run_date == today:
-        return
-
-    last_run_date = today
-
-    data = load_data()
-    cutoff = datetime.now(TIMEZONE) - timedelta(days=COOLDOWN_DAYS)
-
-    recent_pairs = {
-        tuple(pair["pair"])
-        for pair in data
-        if datetime.fromisoformat(pair["date"]) > cutoff
-    }
+    today = now.date()
+    if last_post_date == today:
+        return  # already posted today
 
     guild = client.get_guild(GUILD_ID)
     channel = guild.get_channel(CHANNEL_ID)
@@ -80,48 +58,30 @@ async def daily_couple():
     allowed_role = guild.get_role(ALLOWED_ROLE_ID)
     excluded_roles = [guild.get_role(rid) for rid in EXCLUDED_ROLE_IDS]
 
-    members = [
-        m for m in allowed_role.members
-        if not m.bot and not any(r in m.roles for r in excluded_roles)
-    ]
+    members = []
+
+    for member in allowed_role.members:
+        if member.bot:
+            continue
+        if any(role in member.roles for role in excluded_roles):
+            continue
+        members.append(member)
 
     if len(members) < 2:
+        await channel.send("❌ Not enough members to pick a couple today.")
         return
 
-    tries = 0
-    while tries < 20:
-        pair = random.sample(members, 2)
-        pair_ids = tuple(sorted([pair[0].id, pair[1].id]))
-        if pair_ids not in recent_pairs:
-            break
-        tries += 1
-    else:
-        return
+    pair = random.sample(members, 2)
 
     message = (
         "💖 **Today's Couple Alert!** 💖\n\n"
-        f"🌸 {pair[0].mention} × {pair[1].mention} 🌸\n\n"
-        "Destiny has spoken. Be nice to each other today 😌✨\n\n"
-        "🔁 *New couple drops tomorrow at 10 AM IST*"
+        f"{pair[0].mention} ❤️ {pair[1].mention}\n\n"
+        "✨ Destiny has spoken. Be wholesome ✨"
     )
 
     await channel.send(message)
+    last_post_date = today
+    print("✅ Couple posted successfully")
 
-    data.append({
-        "pair": list(pair_ids),
-        "date": datetime.now(TIMEZONE).isoformat()
-    })
-    save_data(data)
-
-
-@daily_couple.before_loop
-async def before_daily():
-    await client.wait_until_ready()
-    if os.path.exists("today.txt"):
-        with open("today.txt") as f:
-            if f.read().strip() != datetime.now(TIMEZONE).strftime("%Y-%m-%d"):
-                os.remove("today.txt")
 
 client.run(TOKEN)
-
-
