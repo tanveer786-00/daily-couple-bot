@@ -46,7 +46,8 @@ def save_data(data):
 @client.event
 async def on_ready():
     print(f"Logged in as {client.user}")
-    daily_couple.start()
+    if not daily_couple.is_running():
+        daily_couple.start()
 
 
 @tasks.loop(minutes=1)
@@ -120,8 +121,6 @@ async def before_daily():
         with open("today.txt") as f:
             if f.read().strip() != datetime.now(TIMEZONE).strftime("%Y-%m-%d"):
                 os.remove("today.txt")
-
-daily_couple.start()
 
 client.run(TOKEN)
 
