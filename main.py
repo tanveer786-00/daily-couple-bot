@@ -16,8 +16,8 @@ EXCLUDED_ROLE_IDS = list(map(int, os.getenv("EXCLUDED_ROLE_IDS", "").split(","))
 
 TIMEZONE = pytz.timezone("Asia/Kolkata")
 
-POST_HOUR = 10      # 10 AM IST (change if needed)
-POST_MINUTE = 0
+POST_HOUR = 12     # 10 AM IST (change if needed)
+POST_MINUTE = 45
 
 # ─── BOT SETUP ───────────────────────────────────────────
 intents = discord.Intents.default()
