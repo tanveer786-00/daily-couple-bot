@@ -70,7 +70,7 @@ async def daily_couple():
 
     now = datetime.now(TIMEZONE)
 
-    if now.hour == 10 and now.minute == 0:
+    if now.hour == 12 and 0 <= now.minute <= 20:
         if last_post_date != now.date():
             await send_couple()
 
