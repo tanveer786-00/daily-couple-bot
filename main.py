@@ -41,13 +41,15 @@ def save_data(data):
 async def on_ready():
     print(f"Logged in as {client.user}")
     daily_couple.start()
+if os.path.exists("today.txt"):
+    os.remove("today.txt")
 
 
 @tasks.loop(minutes=1)
 async def daily_couple():
     now = datetime.now(TIMEZONE)
 
-    if not (now.hour == 10 and 0 <= now.minute <= 5):
+    if not (now.hour == 11 and 0 <= now.minute <= 5):
         return
 
     if os.path.exists("today.txt"):
