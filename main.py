@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import pytz
 import os
 from datetime import datetime
+last_run_date = None
 
 if os.path.exists("today.txt"):
     os.remove("today.txt")
@@ -50,18 +51,18 @@ async def on_ready():
 
 @tasks.loop(minutes=1)
 async def daily_couple():
+    global last_run_date
     now = datetime.now(TIMEZONE)
 
-if not (now.hour == 11 and 30 <= now.minute <= 35):
-    return
-
-
-    if os.path.exists("today.txt"):
+    # TEST WINDOW: 11:30–11:35
+    if not (now.hour == 11 and 30 <= now.minute <= 35):
         return
 
-    with open("today.txt", "w") as f:
-        f.write(now.strftime("%Y-%m-%d"))
+    today = now.strftime("%Y-%m-%d")
+    if last_run_date == today:
+        return
 
+    last_run_date = today
 
     data = load_data()
     cutoff = datetime.now(TIMEZONE) - timedelta(days=COOLDOWN_DAYS)
