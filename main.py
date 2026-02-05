@@ -5,6 +5,11 @@ import json
 import os
 from datetime import datetime, timedelta
 import pytz
+import os
+from datetime import datetime
+
+if os.path.exists("today.txt"):
+    os.remove("today.txt")
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -41,16 +46,15 @@ def save_data(data):
 async def on_ready():
     print(f"Logged in as {client.user}")
     daily_couple.start()
-if os.path.exists("today.txt"):
-    os.remove("today.txt")
 
 
 @tasks.loop(minutes=1)
 async def daily_couple():
     now = datetime.now(TIMEZONE)
 
-    if not (now.hour == 11 and 0 <= now.minute <= 5):
-        return
+if not (now.hour == 11 and 30 <= now.minute <= 35):
+    return
+
 
     if os.path.exists("today.txt"):
         return
